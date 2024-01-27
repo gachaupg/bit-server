@@ -13,8 +13,9 @@ const userSchema = new mongoose.Schema(
       default:
         'https://img.freepik.com/premium-vector/man-avatar-profile-picture-vector-illustration_268834-538.jpg',
     },
-    name: { type: String },
+    fname: { type: String },
     code: { type: String },
+    lname: { type: String },
     email: {
       type: String,
       unique: true,
@@ -41,8 +42,8 @@ const userSchema = new mongoose.Schema(
     payemail:{type:String},
     isBought:{type:Boolean,default:false},
 
-    paytitle:{type:String},
-    amount:{type:Number,default:0},
+    cName:{type:String},
+    dEstablishment:{type:Number,default:0},
     payname:{type:String},
     payuserid:{type:String},
     trxref:{type:String},
