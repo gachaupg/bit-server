@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema(
       default:
         'https://img.freepik.com/premium-vector/man-avatar-profile-picture-vector-illustration_268834-538.jpg',
     },
-    fname: { type: String },
+    name: { type: String },
     code: { type: String },
     lname: { type: String },
     email: {

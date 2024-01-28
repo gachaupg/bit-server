@@ -37,6 +37,7 @@ export const registerUser = async (req, res, next) => {
     subscribers,
     subscribed,
     unSubscribed,
+    code,
     isAdmin,
     img,
     country,
@@ -64,6 +65,7 @@ export const registerUser = async (req, res, next) => {
       avatar,
       subscribers,
       subscribed,
+      code,
       userName,
       password: hashedPassword,
       name,
@@ -77,6 +79,7 @@ export const registerUser = async (req, res, next) => {
     const token = jwt.sign(
       {
         phone: result.phone,
+        code: result.code,
         email: result.email,
         country: result.country,
         img: result.img,
