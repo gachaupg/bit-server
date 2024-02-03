@@ -18,6 +18,7 @@ import passportSetup from "passport";
 import  cookieSession from "cookie-session";
 import paymentRouter from "./routes/payment.js"
 import pmgRouter from './routes/pmg.js'
+import axios from 'axios';
 // cross origin options
 import  passport from "passport";
 const app = express();
@@ -63,6 +64,53 @@ app.use('/categories', categoryRouter)
 app.use('/pmg', pmgRouter)
 // mongo db  conecctions
 app.use("/pay",paymentRouter)
+
+
+app.get('/api/cryptocurrency/listings/latest', async (req, res) => {
+  try {
+    const response = await axios.get('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest', {
+      headers: {
+        'X-CMC_PRO_API_KEY': 'ecbda1ea-f4e2-427e-8ed6-fde03018cc8c',
+      },
+    });
+
+    // success
+    const json = response.data;
+    console.log(json);
+    res.json(json);
+  } catch (ex) {
+    // error
+    console.log(ex);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/api/auth', async (req, res) => {
+  try {
+    const raw = JSON.stringify({
+      email: '',
+      password: '',
+    });
+
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: raw,
+      redirect: 'follow',
+    };
+
+    const response = await fetch("https://api.nowpayments.io/v1/auth", requestOptions);
+    const result = await response.text();
+    console.log(result);
+    res.json(result);
+  } catch (error) {
+    console.log('error', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 mongoose
   .connect(process.env.MONGODB_URL)
   .then(() => {
