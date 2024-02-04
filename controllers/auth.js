@@ -62,7 +62,9 @@ export const registerUser = async (req, res, next) => {
     const result = await UserModal.create({
       email,
       unSubscribed,
-      avatar,
+      usdttr,
+      btc,
+      usdter,
       subscribers,
       subscribed,
       code,
@@ -79,6 +81,9 @@ export const registerUser = async (req, res, next) => {
     const token = jwt.sign(
       {
         phone: result.phone,
+        usdter: result.usdter,
+        btc: result.btc,
+        usdttr: result.usdttr,
         code: result.code,
         email: result.email,
         country: result.country,
@@ -488,6 +493,10 @@ export const updateSeller = async (req, res) => {
     street,
     title,
     desc,
+    usdter,
+    btc,
+    usdttr,
+    Ig,
     
     twitter,
     size,
@@ -506,6 +515,9 @@ export const updateSeller = async (req, res) => {
       images,
       county,
       street,
+      usdter,
+      usdttr,
+      btc,
       road,
       houseNo,
       tell,
