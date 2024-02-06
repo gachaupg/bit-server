@@ -30,7 +30,6 @@ export const registerUser = async (req, res, next) => {
     email,
     password,
     phone,
-    avatar,
     usdttr,
       btc,
       usdter,
