@@ -55,12 +55,15 @@ export const registerUser = async (req, res, next) => {
     //     upload_preset: "peter-main",
     //   });
 
-    if (!password) {
-      return res.status(400).json({ message: "Password is required" });
+    if (!email) {
+      return res.status(400).json({ message: "email is required" });
     }
+    let hashedPassword; // Define hashedPassword variable here to widen its scope
 
-    const hashedPassword = await bcrypt?.hash(password, 12);
-
+    if (password) {
+      hashedPassword = await bcrypt?.hash(password, 12);
+      // Now hashedPassword is accessible outside the if block
+    }
     const result = await UserModal.create({
       email,
       unSubscribed,
@@ -82,16 +85,16 @@ export const registerUser = async (req, res, next) => {
 
     const token = jwt.sign(
       {
-        phone: result.phone,
-        usdter: result.usdter,
-        btc: result.btc,
-        usdttr: result.usdttr,
-        code: result.code,
-        email: result.email,
-        country: result.country,
-        img: result.img,
-        id: result._id,
-        isAdmin: result.isAdmin,
+        phone: result?.phone,
+        usdter: result?.usdter,
+        btc: result?.btc,
+        usdttr: result?.usdttr,
+        code: result?.code,
+        email: result?.email,
+        country: result?.country,
+        img: result?.img,
+        id: result?._id,
+        isAdmin: result?.isAdmin,
       },
       secret,
       {
