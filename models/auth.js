@@ -70,6 +70,7 @@ const userSchema = new mongoose.Schema(
     phone:{type:Number},
     houseNo:{type:String},
     tell:{type:String},
+    code:{type:String},
     avatar: {
       type:String
     },

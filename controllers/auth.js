@@ -24,55 +24,53 @@ import bcrypt from "bcrypt";
 // Load environment variables
 dotenv.config();
 
-// Register a user
+
 export const registerUser = async (req, res, next) => {
   const {
     email,
     password,
     phone,
     usdttr,
-      btc,
-      usdter,
+    btc,
+    usdter,
     name,
     userName,
     date,
     subscribers,
     subscribed,
     unSubscribed,
-    code,
     isAdmin,
     img,
+    code,
     country,
   } = req.body;
-  try {
-    const oldUser = await UserModal.findOne({ email });
 
+  // Generate an activation code
+  const activationCode = Math.floor(1000 + Math.random() * 9000);
+
+  try {
+    // Check if the user already exists
+    const oldUser = await UserModal.findOne({ email });
     if (oldUser) {
       return res.status(400).json({ message: "User already exists" });
     }
-    // if (img) {
-    //   const uploadedResponse = await cloudinary.uploader.upload(img, {
-    //     upload_preset: "peter-main",
-    //   });
 
-    if (!email) {
-      return res.status(400).json({ message: "email is required" });
-    }
-    let hashedPassword; // Define hashedPassword variable here to widen its scope
+    let hashedPassword;
 
     if (password) {
-      hashedPassword = await bcrypt?.hash(password, 12);
-      // Now hashedPassword is accessible outside the if block
+      hashedPassword = await bcrypt.hash(password, 12);
     }
-    const result = await UserModal.create({
+
+    // Create the user
+    const newUser = await UserModal.create({
       email,
       unSubscribed,
       usdttr,
       btc,
+      code:activationCode,
       usdter,
       subscribers,
       subscribed,
-      code,
       userName,
       password: hashedPassword,
       name,
@@ -81,106 +79,58 @@ export const registerUser = async (req, res, next) => {
       phone,
       country,
       date,
+      activationCode, // Save the activation code in the user's data
     });
 
-    const token = jwt.sign(
-      {
-        phone: result?.phone,
-        usdter: result?.usdter,
-        btc: result?.btc,
-        usdttr: result?.usdttr,
-        code: result?.code,
-        email: result?.email,
-        country: result?.country,
-        img: result?.img,
-        id: result?._id,
-        isAdmin: result?.isAdmin,
-      },
+    // Send the activation email
+    const activationToken = jwt.sign(
+      { userId: newUser._id, activationCode },
       secret,
-      {
-        expiresIn: "1h",
-      }
+      { expiresIn: '100m' }
     );
-    res.status(201).json({ result, token });
-    // }
+
+    await sendActivationEmail(email, activationCode);
+
+    res.status(200).json({
+      status: true,
+      message: `Please check your email ${email} to activate your account`,
+      activationToken,
+    });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Something went wrong" });
-    console.log(error);
   }
-
-  // try {
-  //   const { name, email, code, password } = req.body;
-  //   const oldUser = await userModel.findOne({ email });
-  //   if (oldUser) {
-  //     return res
-  //       .status(500)
-  //       .json({ status: 500, message: "User with that email already exists" });
-  //   }
-  //   const user = {
-  //     name,
-  //     email,
-  //     password,
-  //     code,
-  //   };
-
-  //   const activationToken = createActivationToken(user);
-
-  //   const activationCode = activationToken.activationCode;
-  //   const data = { user: { name: user.name }, activationCode };
-
-  //   const currentModuleURL = import.meta.url;
-  //   const currentModulePath = fileURLToPath(currentModuleURL);
-  //   const currentDir = dirname(currentModulePath);
-
-  //   // Specify the correct template name here
-  //   const template = "Mail.ejs"; // Replace with your actual template file name
-
-  //   const html = await ejs.renderFile(
-  //     path.join(currentDir, "../mails", template), // Update the path to the template
-  //     data
-  //   );
-  //   try {
-  //     await sendMail({
-  //       email: user.email,
-  //       to: user.email, // This should be the recipient's email address
-  //       subject: "Activate account",
-  //       template: "Mail.ejs",
-  //       data,
-  //     });
-
-  //     res.status(200).json({
-  //       status: true,
-  //       message: `Please check your email ${user.email} to activate your account`,
-  //       activationToken: activationToken.token,
-  //     });
-  //   } catch (error) {
-  //     console.error(error);
-  //     return next(new Error(error.message));
-  //   }
-  // } catch (error) {
-  //   console.error(error);
-  //   return next(new Error(error.message));
-  // }
-};
-// Create activation token
-export const createActivationToken = (user) => {
-  const activationCode = `${Math.floor(
-    1000 + Math.random() * 9000
-  ).toString()}`;
-  const token = jwt.sign(
-    {
-      user,
-      activationCode,
-    },
-    process.env.ACTIVATION_SECRET,
-    {
-      expiresIn: "100m",
-    }
-  );
-  return { token, activationCode };
 };
 
-// Activate user
+// Function to send activation email with OTP
+const sendActivationEmail = async (email, activationCode) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+            secure: false,
+            port: 587,
+            auth: {
+              user: "worldofhustles@gmail.com",
+              pass: "tewcczqvepiskpbm",
+            },
+    });
+
+    const mailOptions = {
+      from: "worldofhustles@gmail.com",
+            to: email, // Receiver address
+      subject: "OTP for account activation", // Subject line
+      text: `Your OTP for account activation is: ${activationCode}`, // Plain text body
+    };
+
+    await transporter.sendMail(mailOptions); // Sending the email
+
+    console.log("Activation email sent successfully");
+  } catch (error) {
+    console.error("Error sending activation email:", error);
+    throw new Error("Error sending activation email");
+  }
+};
+
 export const activateUser = async (req, res, next) => {
   try {
     const { activation_token, activation_code } = req.body;
@@ -201,13 +151,7 @@ export const activateUser = async (req, res, next) => {
       });
     }
 
-    // Ensure that the 'password' field is set correctly
-    const user = await userModel.create({
-      name,
-      email,
-      password,
-    });
-    return res.status(201).json(user);
+ 
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal server error" });
