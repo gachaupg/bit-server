@@ -24,7 +24,6 @@ import bcrypt from "bcrypt";
 // Load environment variables
 dotenv.config();
 
-
 export const registerUser = async (req, res, next) => {
   const {
     email,
@@ -62,7 +61,7 @@ export const registerUser = async (req, res, next) => {
     }
 
     // Create the user
-    const newUser = await UserModal.create({
+    const result = await UserModal.create({
       email,
       unSubscribed,
       usdttr,
@@ -77,6 +76,7 @@ export const registerUser = async (req, res, next) => {
       isAdmin,
       img,
       phone,
+      code:activationCode,
       country,
       date,
       activationCode, // Save the activation code in the user's data
@@ -84,40 +84,54 @@ export const registerUser = async (req, res, next) => {
 
     // Send the activation email
     const activationToken = jwt.sign(
-      { userId: newUser._id, activationCode },
+      { userId: result._id, activationCode },
       secret,
       { expiresIn: '100m' }
     );
-
-    await sendActivationEmail(email, activationCode);
+    const token = jwt.sign(
+      {
+        phone: result.phone,
+        email: result.email,
+        country: result.country,
+        img: result.img,
+        id: result._id,
+        
+        isAdmin: result.isAdmin,
+      },
+      secret,
+      {
+        expiresIn: "2h",
+      }
+    );
+    await sendActivationEmail(email,activationCode);
 
     res.status(200).json({
       status: true,
       message: `Please check your email ${email} to activate your account`,
       activationToken,
+      result
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Something went wrong" });
+    res.status(500).json({ message: "Something went wrong on the serhhver" });
   }
 };
+
 
 // Function to send activation email with OTP
 const sendActivationEmail = async (email, activationCode) => {
   try {
     const transporter = nodemailer.createTransport({
       service: "gmail",
-            secure: false,
-            port: 587,
-            auth: {
-              user: "worldofhustles@gmail.com",
-              pass: "tewcczqvepiskpbm",
-            },
+      auth: {
+        user: "worldofhustles@gmail.com",
+        pass: "tewcczqvepiskpbm",
+      },
     });
 
     const mailOptions = {
       from: "worldofhustles@gmail.com",
-            to: email, // Receiver address
+      to: email, // Receiver address
       subject: "OTP for account activation", // Subject line
       text: `Your OTP for account activation is: ${activationCode}`, // Plain text body
     };
@@ -131,6 +145,7 @@ const sendActivationEmail = async (email, activationCode) => {
   }
 };
 
+// Activate user
 export const activateUser = async (req, res, next) => {
   try {
     const { activation_token, activation_code } = req.body;
@@ -151,7 +166,13 @@ export const activateUser = async (req, res, next) => {
       });
     }
 
- 
+    // Ensure that the 'password' field is set correctly
+    const user = await userModel.create({
+      name,
+      email,
+      password,
+    });
+    return res.status(201).json(user);
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: "Internal server error" });
