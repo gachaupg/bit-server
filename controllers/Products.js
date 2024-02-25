@@ -16,7 +16,7 @@ export const createUser = async (req, res) => {
     await newUserContent.save();
     res.status(201).json(newUserContent);
   } catch (error) {
-    res.status(404).json({ message: "ooops !! Data not found" });
+    res.status(404).json({ message: "ooops well !! Data not found" });
   }
 };
 function shuffleArray(array) {

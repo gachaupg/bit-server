@@ -113,7 +113,7 @@ export const registerUser = async (req, res, next) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Something went wrong on the serhhver" });
+    res.status(500).json({ message: "Something went wrong on the the server" });
   }
 };
 
